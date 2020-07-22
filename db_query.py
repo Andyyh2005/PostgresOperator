@@ -6,7 +6,9 @@ def handle_query(inSql):
     cur = None
     try:
         # Connect to an existing database
-        connect_str = "dbname=" + api.config.dbname + " " + "user=" + api.config.user + " " + "host=" + api.config.host + " " + \
+        connect_str = "dbname=" + api.config.dbname + " " + \
+            "user=" + api.config.user + " " + \
+            "host=" + api.config.host + " " + \
             "password=" + api.config.password
         conn = psycopg2.connect(connect_str)
     except Exception as e:
@@ -29,7 +31,8 @@ def handle_query(inSql):
         while(rows):
             for r in rows:
                 for i, c in enumerate(r):
-                    outStr += str(c) + ('' if i==len(r)-1 else api.config.delimiter) ## Delimiter to separate postrgres columns in output
+                    outStr += str(c) + \
+                    ('' if i==len(r)-1 else api.config.delimiter) # Delimiter to separate postrgres columns in output
                 outStr += "\n"
             api.send("output", outStr)
             outStr = ""
