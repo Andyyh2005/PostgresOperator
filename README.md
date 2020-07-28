@@ -75,4 +75,53 @@ You can use the SAP Data Intelligence Modeler to create your own operators and e
 
 ![](images/OperatorCreateDlg.png)
 
-- Choose OK.
+- Choose **OK**.
+
+The tool opens the form-based Operator Editor Window:
+
+![](images/OperatorCreateFormWnd.png)
+
+### 2.2. Define the Input and Output Ports
+- Add an **Input Port** with the name "input" of type "string":
+
+![](images/OperatorCreatePortIn.png)
+
+This port will be used later to pass a SQL statememt string to the operator and to trigger a Postgres database table query.
+
+- Add two **Output Ports** with the name "output" and "debug", both of the same type "string":
+
+![](images/OperatorCreatePortOut.png)
+
+The "output" port will be used later to send the SQL query result and the "debug" port will be used to send debug messages, such as error messages.
+
+### 2.3. Define Tags
+The **Tags** describe the runtime requirements of the operator and allow to force the execution in a specific Docker image instance whose **Docker file** was annotated with the same **Tag** and **Version**.
+
+In our case, we require Python version 3.6 and the Python library "psycopg2" which is not included in the Python standard library. Both are provided by the Dockerfile which we have created before.
+
+- In the **Tags** section, choose **+** (Add tag) and choose the tag “python36”, the tag "tornado" with version "5.0.2" and the tag "psycopg2" with version "2.8.5".
+
+![](images/OperatorCreateAddTags.png)
+
+### 2.4. Provide the Operator Configuration
+In the **Configuration** section, you can find already one Parameter "codelanguage" that was inherited from the Python3Operator. It is not possible to remove the inherited Parameters, but you can change their default values.
+
+- Add seven additional **Parameters** that we will later use to control the behavior of the operator during runtime:
+
+Name | Title | Description | Type | Format | Required | Default-Value |
+---|---|---|---|---|---|---|
+host | Database host | Database host | string | None | Yes | remotehost |
+dbName | Database Name | Database Name | String | None | Yes | test |
+user | Database User | Database User| string | None | Yes | test |
+password | Database Password | Database Password | string | Yes | Password |
+delimiter | Column Delimiter | Column Delimiter in output | string | None | Yes | , |
+outInbatch  | Output in batch | Output in batch | Boolean | | Yes | False |
+outbatchsize | Output batch size (rows) | Output batch size in rows | Integer | | No | 10 |
+
+For the outbatchsize Parameter, we also set its Visibility property as below:
+
+![](images/OperatorCreateConfigVisibility.png)
+
+This ensures the option only appear in the operator configuration UI if outInbatch value is true.
+
+![](images/OperatorCreateConfig.png)
