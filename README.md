@@ -380,7 +380,19 @@ Now we can run the pipeline and test the query function of the Postgres Client O
 
 Initially, the pipeline is in a pending state. In this state, the pipeline is being prepared for execution. It remains in this state until either an error occurs, or state of all subgraphs in the pipeline is running.
 
-- After the pipeline entering into a running state, Open the **Terminal** via **Right click -> Open UI**:
+- After the pipeline entering into a running state, Open the **Wiretap** UI via **Right click -> Open UI**:
+
+![](images/GraphRunningOpenWitapUI.png)
+
+- Open the **Terminal** via **Right click -> Open UI**:
+
+![](images/GraphTerminalOpenUI.png)
+
+The browser opens the terminal, we can enter the sql query like below:
+
+```
+
+```
 
 
 
