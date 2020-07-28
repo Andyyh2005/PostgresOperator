@@ -399,7 +399,23 @@ The browser opens the terminal, it is waititng for enter the query:
 
 - Enter the quey statement in the **Terminal** like below:
 
-![](images/GraphRunningTerminalEmpty.png)
+![](images/GraphRunningEnterQuery.png)
+
+Please adapt the table name to your own. Now the query is sending to downstream operator.
+
+- Observe the **Wiretap** UI, you can see the below output:
+
+![](images/GraphRunningOutputAll.png)
+
+- Enter an empty quey statement in the **Terminal** like below:
+
+![](images/GraphRunningEnterEmpty.png)
+
+Notice the debug mesage shows the input is empty.
+
+Congratulations, you have learned how to create a custom opeator, and build a data pipeline to use that opeator.
+
+
 
 
 
