@@ -52,4 +52,13 @@ Next, provide tags for the Docker image to describe its properties:
 
 ![](images/dockerfileBuild.png)
 
-You can monitor the status of the Docker build process from the Log tab in the bottom pane:
+You can monitor the status of the Docker build process from the **Log** tab in the bottom pane:
+
+![](images/dockerfileBuildMonitor.png)
+
+Once finished, the final build status will be updated:
+
+![](images/dockerfileBuildComplete.png)
+
+> The successfully built image will be pushed to the local Docker registry that was configured during installation of SAP Data Intelligence.
+
