@@ -1,3 +1,4 @@
+import re
 import psycopg2
 
 # Mock pipeline engine api to allow testing outside pipeline engine
@@ -13,20 +14,26 @@ except NameError:
         def set_port_callback(port, callback):
              print(
                  "Call \"" + callback.__name__ + "\" to simulate behavior when messages arrive at port \"" + port + "\".")
-             callback("SELECT * FROM test55")
+             callback("  select * FROM test")
 
         class config:
             dbname = 'testpython'
             user = 'andy'
             host = 'localhost'
-            password = 'Sapvora123!'#TODO: change to XX
+            password = 'testme'
             delimiter = ','
+            outInbatch = True
+            outbatchsize = 2
 
 
 dbname = api.config.dbname
 user = api.config.user
 host = api.config.host
 password = api.config.password
+delimiter = api.config.delimiter # Delimiter to separate postrgres columns in output
+outInbatch = api.config.outInbatch
+outbatchsize = api.config.outbatchsize
+
 
 def handle_query(query):
     conn = None
@@ -42,20 +49,28 @@ def handle_query(query):
         # Open a cursor to perform database operations
         cursor = conn.cursor()
         cursor.execute(query)
-        conn.commit()
 
-        # output the query result to the output port
         outStr = ""
-        rows = cursor.fetchmany(2)
-        while(rows):
+        rows = []
+        if not outInbatch:
+            rows = cursor.fetchall()
             for r in rows:
                 for i, c in enumerate(r):
                     outStr += str(c) + \
-                    ('' if i==len(r)-1 else api.config.delimiter) # Delimiter to separate postrgres columns in output
+                        ('' if i==len(r)-1 else delimiter)
                 outStr += "\n"
             api.send("output", outStr)
-            outStr = ""
-            rows = cursor.fetchmany(2)
+        else:
+            rows = cursor.fetchmany(outbatchsize)
+            while(rows):
+                for r in rows:
+                    for i, c in enumerate(r):
+                        outStr += str(c) + \
+                            ('' if i==len(r)-1 else delimiter)
+                    outStr += "\n"
+                api.send("output", outStr)
+                outStr = ""
+                rows = cursor.fetchmany(outbatchsize)
     except Exception as e:
         api.send("debug", str(e))
     finally:
@@ -66,12 +81,16 @@ def handle_query(query):
 
 
 # Interface for integrating the postgres query function into the pipeline engine
-def interface(query):
-    if query:
-        handle_query(query)
+def on_input(data):
+    if data:
+        m = re.match(r'\s*select', data, flags=re.IGNORECASE)
+        if m:
+            handle_query(data)
+        else:
+            api.send("debug", "Only support SELECT Statement.")
     else:
-        api.send("debug", "Input is empty")
+        api.send("debug", "Input is empty.")
 
 
 # Triggers the request for every message (the message provides the query)
-api.set_port_callback("input", interface)
+api.set_port_callback("input", on_input)
