@@ -62,3 +62,17 @@ Once finished, the final build status will be updated:
 
 > The successfully built image will be pushed to the local Docker registry that was configured during installation of SAP Data Intelligence.
 
+## 2. Create a custom Operator using the Docker Image
+### 2.1. Create the Operator
+You can use the SAP Data Intelligence Modeler to create your own operators and execute them in the graphs. The Modeler provides a form-based editor to create operators. Please refer to [Creating Operators](https://help.sap.com/viewer/aff95eebc2e04c44816e6ff0d21c3c88/3.0.latest/en-US/049d2f3cc69c4281a3f4570c0d2d066e.html) for the detailed steps.
+- Open the **Repository** tab in the SAP Data Intelligence Modeler, navigate to the **operators** section, right-click and click on **Create Operator**:
+
+![](images/OperatorCreateStart.png)
+
+- In the **Name** text field, provide the name "demo.postgresclient" for the new operator.
+- In the **Display Name** text field, provide the display name "Postgres Client" for the operator.
+- In the Base Operator dropdown list, select the "Python3 Operator":
+
+![](images/OperatorCreateDlg.png)
+
+- Choose OK.
