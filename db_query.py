@@ -14,7 +14,7 @@ except NameError:
         def set_port_callback(port, callback):
              print(
                  "Call \"" + callback.__name__ + "\" to simulate behavior when messages arrive at port \"" + port + "\".")
-             callback("  select * FROM test")
+             callback("select * FROM test")
 
         class config:
             dbname = 'testpython'
