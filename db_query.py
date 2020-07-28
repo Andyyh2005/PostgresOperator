@@ -17,7 +17,7 @@ except NameError:
              callback("select * FROM test")
 
         class config:
-            dbname = 'testpython'
+            dbName = 'testpython'
             user = 'andy'
             host = 'localhost'
             password = 'testme'
@@ -26,7 +26,7 @@ except NameError:
             outbatchsize = 2
 
 
-dbname = api.config.dbname
+dbname = api.config.dbName
 user = api.config.user
 host = api.config.host
 password = api.config.password
