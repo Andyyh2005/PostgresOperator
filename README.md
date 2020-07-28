@@ -125,3 +125,263 @@ For the outbatchsize Parameter, we also set its Visibility property as below:
 This ensures the option only appear in the operator configuration UI if outInbatch value is true.
 
 ![](images/OperatorCreateConfig.png)
+
+### 2.5. Define the Operator Script
+In the **Script** section, you can provide your own Python script in two different ways:
+1. **Inline Editor**: The code can be written directly into the Script Editor which stores the code together (inline) with the operator definition in the repository. This is the preferred way in cases where you only want to write small scripts that do not require external testing.
+2. **Upload File**: You can upload a Python script as a file which is then stored side-by-side with the Operator in the Repository and referenced in the Operator definition. This is the preferred way in cases where you plan to integrate more-complex application logic in Python language which shall also be testable externally, e.g. by accessing the Python script on disk.
+
+In this example, we go for option (2) and upload a file containing a Python script.
+
+- Click on the **Inline Editor** in the Script section and then click on **Upload File** in the drop-down menu:
+
+![](images/OperatorCreateUploadFileOption.png)
+
+This will by default reference and create a file **script.py** in the Repository as shown on the right side of the Script editor. All the code written into the Script  Editor will end up in this script which can be accessed from the Repository or disk.
+
+In our case, we will create an own Python script locally and upload this to the Repository via the Script Editor.
+
+- Open an Editor of your choice, e.g. Notepad, paste the following Python code and save it as a file called “db_query.py”:
+
+```
+import re
+import psycopg2
+
+# Mock pipeline engine api to allow testing outside pipeline engine
+try:
+    api
+except NameError:
+    class api:
+        @staticmethod
+        def send(port, data):
+             print(port + " receieved: " + str(data))
+
+        @staticmethod   
+        def set_port_callback(port, callback):
+             print(
+                 "Call \"" + callback.__name__ + "\" to simulate behavior when messages arrive at port \"" + port + "\".")
+             callback("select * FROM test")
+
+        class config:
+            dbName = 'testpython'
+            user = 'andy'
+            host = 'localhost'
+            password = 'testme'
+            delimiter = ','
+            outInbatch = True
+            outbatchsize = 2
+
+
+dbname = api.config.dbName
+user = api.config.user
+host = api.config.host
+password = api.config.password
+delimiter = api.config.delimiter # Delimiter to separate postrgres columns in output
+outInbatch = api.config.outInbatch
+outbatchsize = api.config.outbatchsize
+
+
+def handle_query(query):
+    conn = None
+    cursor = None
+    try:
+        # Connect to an existing database
+        connect_str = "dbname=" + dbname + " " + \
+            "user=" + user + " " + \
+            "host=" + host + " " + \
+            "password=" + password
+        conn = psycopg2.connect(connect_str)
+        
+        # Open a cursor to perform database operations
+        cursor = conn.cursor()
+        cursor.execute(query)
+
+        outStr = ""
+        rows = []
+        if not outInbatch:
+            rows = cursor.fetchall()
+            for r in rows:
+                for i, c in enumerate(r):
+                    outStr += str(c) + \
+                        ('' if i==len(r)-1 else delimiter)
+                outStr += "\n"
+            api.send("output", outStr)
+        else:
+            rows = cursor.fetchmany(outbatchsize)
+            while(rows):
+                for r in rows:
+                    for i, c in enumerate(r):
+                        outStr += str(c) + \
+                            ('' if i==len(r)-1 else delimiter)
+                    outStr += "\n"
+                api.send("output", outStr)
+                outStr = ""
+                rows = cursor.fetchmany(outbatchsize)
+    except Exception as e:
+        api.send("debug", str(e))
+    finally:
+        if(cursor):
+            cursor.close()
+        if(conn):
+            conn.close()
+
+
+# Interface for integrating the postgres query function into the pipeline engine
+def on_input(data):
+    if data:
+        m = re.match(r'\s*select', data, flags=re.IGNORECASE)
+        if m:
+            handle_query(data)
+        else:
+            api.send("debug", "Only support SELECT Statement.")
+    else:
+        api.send("debug", "Input is empty.")
+
+
+# Triggers the request for every message (the message provides the query)
+api.set_port_callback("input", on_input)
+```
+The script mocks the Python pipeline API, which allows to use and test the Python script externally. 
+
+- Click the upload button on the right side of the Script Editor:
+
+![](images/OperatorCreateUploadFileIcon.png)
+
+- Choose the file "db_query.py" from your local disk where you have stored it, e.g.:
+
+![](images/OperatorCreateUploadFile.png)
+
+The Pipeline Modeler uploads the file to the Repository, references the script in the Operator definition and shows the content in the Script Editor:
+
+![](images/OperatorCreateScriptContent.png)
+
+When you now change the code in the Script Editor, it will be changed in the db_query.py file, although it appears like an inline script.
+
+### 2.6. Modify the Operator Display Icon
+A default operator display icon is used when you create a custom operator. You can change the icon within the tool or upload your own icon in Scalable Vector Graphics (SVG) format.
+- In the Operator editor, click the operator’s default icon:
+
+![](images/OperatorCreateChooseOpIcon.png)
+
+- In the Icon dropdown list, select the wanted icon, in our case we choose “angle-right”:
+
+![](images/OperatorCreateSetOpIcon.png)
+
+- Click OK.
+
+The tool uses the new icon for operators when it displays the operator in the Pipeline editor:
+
+![](images/OperatorCreateFinalOpIcon.png)
+
+### 2.7. Maintain Documentation for the Operator
+- In the Documentation section, you can write the documentation in Markdown language.
+
+![](images/OperatorCreateDoc.png)
+
+We fill its content like below:
+
+```
+Postgres Client Operator
+===========
+
+This operator accepts the select query statement for a given postgreSQL database table and output the result.
+
+Configuration parameters
+------------
+
+- **host** (type string): The databse hostname
+- **dbname** (type string): The database name
+- **user** (type string): The User name for acccessing the database
+- **password** (type string): The password for the given user
+- **delimiter** (type string): The delimiter to separate columns of a row in operator output
+- **outInbatch** (type Boolean): Option for Output in batch
+- **outbatchsize** (type Integer): Output batch size in rows if outInbatch is True.
+
+Input
+------------
+- **input** (type string): The database query statement
+
+Output
+------------
+- **output** (type string): The query result
+- **debug** (type string): Debug messages
+
+```
+
+### 2.8. Save the Operator:
+In the editor toolbar, click the Save-icon to save the operator:
+
+![](images/OperatorCreateSave.png)
+
+### 2.9 Explore the Repository Content
+Now, the operator is created. We can check its conent in the **Repository** tab in the SAP Data Intelligence Modeler:
+
+![](images/OperatorInRepo.png)
+
+## 3. Use the Operator in a Pipeline
+Now, let's create a pipeline to test the operator we created above.
+
+### 3.1 Create a Pipeline (Graph)
+- In the navigation pane on left side, choose the Graphs tab and click on the + icon to create a new Pipeline (Graph):
+
+![](images/GraphCreateClickPlus.png)
+
+The tool opens the Graph Editor where pipelines can be modeled by adding and connecting predefined operators:
+
+![](images/GraphCreateSpace.png)
+
+- Click on the Disk-icon to save the Pipeline:
+
+![](images/GraphCreateSaveIcon.png)
+
+- Provide the **Name** “PostgresQueryExample” and the **Description** “PostgreSQL Query Example” and click OK:
+
+![](images/GraphCreateSave.png)
+
+### 3.1 Add the custom Postgres Client Operator
+- Open the **Operators** tab in the navigation pane on the left and search for the **Postgres Client** by typing the name into the **Search** field:
+
+![](images/GraphCreateFindOp.png)
+
+- Add the **Postgres Client** to the pipeline by drag & drop into the Graph Editor:
+
+![](images/GraphCreateDragOpPpstgres.png)
+
+- You can view the documentation of the operator by first right-clicking on the operator and then by clicking on **Open Documentation**:
+
+![](images/GraphCreateShowPpstgresDoc.png)
+
+- Next, open the Configuration of the operator again via right click:
+
+![](images/GraphCreateShowPostgresConfig.png)
+
+- In the **Configuration**, fill all the appropriate configuration information:
+
+![](images/GraphCreatePostgreOpConfig.png)
+
+### 3.2 Add a Terminal Operator
+- Next, add a **Terminatl operator**, connect its output port to the input port of the Postgres Client Operator. Also, connect the debug port of the Postgres Client Operator to the Terminatl operator's input port. This setting will allow us to send the sql query statment to Postgres Client Operator and receieve the debug messages interactively.
+
+![](images/GraphCreateAddTerminalOp.png)
+
+### 3.3 Add a Wiretap  Operator
+- Finally, add a **Wiretap operator**, connect the output port of the Postgres Client Operator to the Wiretap operator's input port. The Wiretap operator will show the query result.
+
+![](images/GraphCreateAddWiretapOp.png)
+
+- You have now finalized the pipeline. Click again [CTRL] + [S] to save and update the pipeline in the repository.
+
+## 4. Run the Pipeline
+Now we can run the pipeline and test the query function of the Postgres Client Operator.
+
+- Click the **Run** button:
+
+![](images/GraphRun.png)
+
+Initially, the pipeline is in a pending state. In this state, the pipeline is being prepared for execution. It remains in this state until either an error occurs, or state of all subgraphs in the pipeline is running.
+
+- After the pipeline entering into a running state, Open the **Terminal** via **Right click -> Open UI**:
+
+
+
+
