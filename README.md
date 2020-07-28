@@ -384,15 +384,22 @@ Initially, the pipeline is in a pending state. In this state, the pipeline is be
 
 ![](images/GraphRunningOpenWitapUI.png)
 
+There is nothing ouptput since we have not run the query yet:
+
+![](images/GraphWiretapNothing.png)
+
+
 - Open the **Terminal** via **Right click -> Open UI**:
 
 ![](images/GraphTerminalOpenUI.png)
 
-The browser opens the terminal, we can enter the sql query like below:
+The browser opens the terminal, it is waititng for enter the query:
 
-```
+![](images/GraphRunningTerminalEmpty.png)
 
-```
+- Enter the quey statement in the **Terminal** like below:
+
+![](images/GraphRunningTerminalEmpty.png)
 
 
 
